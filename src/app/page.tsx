@@ -3,6 +3,7 @@ import { Bell, ChevronRight, Flame, Globe2, Search, Sparkles, TrendingUp, Users 
 import { Brand } from "@/components/brand";
 import { Sidebar } from "@/components/sidebar";
 import { PollCard } from "@/components/poll-card";
+import { PiAuthButton } from "@/components/pi-auth-button";
 
 const polls = [
   {
@@ -45,10 +46,7 @@ export default function HomePage() {
           <div className="hidden text-sm font-semibold text-slate-400 lg:block">Thursday, November 19, 2026</div>
           <div className="ml-auto flex items-center gap-3">
             <button aria-label="Notifications" className="grid h-10 w-10 place-items-center rounded-full bg-slate-50 text-slate-500 hover:bg-votely-lavender hover:text-votely-purple"><Bell size={19}/></button>
-            <button className="flex items-center gap-2 rounded-full border border-violet-100 bg-violet-50 py-1.5 pl-1.5 pr-3 text-sm font-bold text-votely-purple">
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-violet-200 text-xs">G</span>
-              Connect Pi
-            </button>
+            <PiAuthButton />
           </div>
         </div>
       </header>
