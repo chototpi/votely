@@ -87,9 +87,9 @@ export function PiAuthButton() {
         await verifyToken(auth.accessToken);
 
       } else {
-        const clientId = process.env.PI_CLIENT_ID;
+        const clientId = process.env.NEXT_PUBLIC_PI_CLIENT_ID;
         const redirectUri =
-          process.env.PI_REDIRECT_URI;
+          process.env.NEXT_PUBLIC_PI_REDIRECT_URI;
 
         if (!clientId || !redirectUri) {
           throw new Error("Thiếu cấu hình Pi Sign-In");
