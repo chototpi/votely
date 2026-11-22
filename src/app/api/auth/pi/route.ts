@@ -1,6 +1,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createPiSession } from "@/lib/pi-session";
+import { requestVotelyBackend } from "@/lib/votely-backend";
 
 export const runtime = "nodejs";
 
@@ -52,22 +53,11 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Đồng bộ tài khoản với MySQL trên DirectAdmin
-    const backendUrl = process.env.VOTELY_BACKEND_URL;
-
-    if (!backendUrl) {
-      throw new Error("Thiếu VOTELY_BACKEND_URL");
-    }
-
-    const syncResponse = await fetch(
-      `${backendUrl.replace(/\/+$/, "")}/api/votely/sync-user`,
+    const syncResponse = await requestVotelyBackend(
+      "/api/votely/sync-user",
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ accessToken }),
-        cache: "no-store",
-        signal: AbortSignal.timeout(15000)
+        body: { accessToken }
       }
     );
 
