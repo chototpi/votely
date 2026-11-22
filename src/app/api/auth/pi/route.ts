@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from "next/server";
 import { createPiSession } from "@/lib/pi-session";
 
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Xác minh trực tiếp với Pi Platform
+    // 1. Xác minh accessToken trực tiếp với Pi
     const piResponse = await fetch(
       "https://api.minepi.com/v2/me",
       {
@@ -25,7 +26,8 @@ export async function POST(request: NextRequest) {
         headers: {
           Authorization: `Bearer ${accessToken}`
         },
-        cache: "no-store"
+        cache: "no-store",
+        signal: AbortSignal.timeout(10000)
       }
     );
 
@@ -37,17 +39,53 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await piResponse.json();
-
-    // Hỗ trợ cả cấu trúc dữ liệu trực tiếp và dạng user lồng nhau
     const piUser = data.user ?? data;
 
     if (!piUser.uid || !piUser.username) {
       return NextResponse.json(
-        { success: false, error: "Pi không trả về thông tin tài khoản hợp lệ" },
+        {
+          success: false,
+          error: "Pi không trả về thông tin tài khoản hợp lệ"
+        },
         { status: 401 }
       );
     }
 
+    // 2. Đồng bộ tài khoản với MySQL trên DirectAdmin
+    const backendUrl = process.env.VOTELY_BACKEND_URL;
+
+    if (!backendUrl) {
+      throw new Error("Thiếu VOTELY_BACKEND_URL");
+    }
+
+    const syncResponse = await fetch(
+      `${backendUrl.replace(/\/+$/, "")}/api/votely/sync-user`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ accessToken }),
+        cache: "no-store",
+        signal: AbortSignal.timeout(15000)
+      }
+    );
+
+    const syncData = await syncResponse.json();
+
+    if (!syncResponse.ok || !syncData.success) {
+      console.error("Votely sync failed:", syncData);
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Không thể đồng bộ tài khoản Votely"
+        },
+        { status: 502 }
+      );
+    }
+
+    // 3. Tạo phiên đăng nhập sau khi đồng bộ thành công
     const session = createPiSession({
       uid: piUser.uid,
       username: piUser.username
@@ -58,7 +96,8 @@ export async function POST(request: NextRequest) {
       user: {
         uid: piUser.uid,
         username: piUser.username
-      }
+      },
+      balance: syncData.balance
     });
 
     response.cookies.set("votely_session", session, {
@@ -75,7 +114,10 @@ export async function POST(request: NextRequest) {
     console.error("Pi authentication error:", error);
 
     return NextResponse.json(
-      { success: false, error: "Không thể xác minh tài khoản Pi" },
+      {
+        success: false,
+        error: "Không thể xác minh hoặc đồng bộ tài khoản Votely"
+      },
       { status: 500 }
     );
   }
