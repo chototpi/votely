@@ -158,11 +158,9 @@ frontend hoặc log. Next.js ký method, endpoint, timestamp, request ID,
 hash body và UID (khi API cần UID); backend chỉ chấp nhận chữ ký hợp lệ
 trong thời gian 5 phút.
 
-**Trạng thái:** Người dùng đã xác nhận backend DirectAdmin chạy sau khi
-nâng Node lên `22.14.0`, và đã thêm API `sync-user` vào backend. Việc
-nối API này vào Next.js `/api/auth/pi` và kiểm thử end-to-end chưa được
-xác nhận hoàn tất. Codex phải kiểm tra source hiện tại trước khi kết
-luận.
+**Trạng thái:** Luồng Pi Sign-In đã được kiểm thử end-to-end trên
+production: đăng nhập thành công, đồng bộ tài khoản/ví VT, balance bằng
+`0` và history rỗng cho tài khoản mới.
 
 ## 5. Database Votely đã tạo
 
@@ -442,22 +440,23 @@ hosting.
 
 ### Cần kiểm tra hoặc hoàn thành
 
-1.  [ ] Kiểm tra source thực tế của API `sync-user` và đảm bảo kết nối
-    pool, transaction, rollback, release hoạt động đúng.
+1.  [x] Đã kiểm tra source `sync-user`: dùng pool riêng, transaction,
+    rollback và release connection.
 2.  [x] Đã thêm xác thực HMAC service-to-service vào source Next.js và
     backend local; cần cấu hình `VOTELY_SERVICE_SECRET` trên Vercel và
     DirectAdmin trước khi deploy.
-3.  [ ] Cấu hình `VOTELY_BACKEND_URL` và `VOTELY_SERVICE_SECRET` trong
-    Vercel server environment.
+3.  [x] Đã cấu hình `VOTELY_BACKEND_URL` và `VOTELY_SERVICE_SECRET`
+    trong Vercel server environment.
 4.  [x] Next.js đã gọi DirectAdmin từ `src/app/api/auth/pi/route.ts`
     sau khi Pi token được xác minh.
 5.  [x] Chỉ tạo cookie session sau khi đồng bộ tài khoản thành công.
-6.  [ ] Deploy và kiểm thử đăng nhập lần đầu.
-7.  [ ] Kiểm tra MySQL: một hàng trong `votely_users`, một ví tương ứng
-    trong `votely_vt_accounts`, balance bằng 0.
+6.  [x] Đã deploy và kiểm thử đăng nhập lần đầu trên production.
+7.  [x] API production trả về user đúng, ví VT với balance bằng 0.
+    Cần kiểm tra trực tiếp trong MySQL trước khi kết luận không có bản
+    ghi trùng ở mức database.
 8.  [ ] Kiểm thử đăng nhập lần hai không tạo bản ghi/ví trùng.
-9.  [x] Đã thêm source API balance và history dựa trên session; cần
-    deploy/cấu hình môi trường rồi kiểm thử end-to-end.
+9.  [x] API balance và history dựa trên session đã deploy và kiểm thử
+    end-to-end trên production.
 10. [ ] Hoàn thiện luồng tạo poll và trừ 1 VT atomic.
 11. [ ] Thiết kế schema vote và quy tắc bỏ phiếu trước khi triển khai
     vote.

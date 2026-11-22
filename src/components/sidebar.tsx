@@ -12,14 +12,14 @@ const items = [
   { label: "Profile", href: "/profile", icon: UserRound }
 ];
 
-export function Sidebar() {
+export function Sidebar({ activePath = "/" }: { activePath?: string }) {
   return (
     <aside className="hidden w-[245px] shrink-0 lg:block">
       <div className="sticky top-6 rounded-[28px] border border-white bg-white p-5 shadow-soft">
         <Brand />
         <div className="mt-9 space-y-2">
-          {items.map(({ label, href, icon: Icon, active }) => (
-            <Link key={label} href={href} className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition ${active ? "bg-votely-lavender text-votely-purple" : "text-slate-500 hover:bg-slate-50 hover:text-votely-ink"}`}>
+          {items.map(({ label, href, icon: Icon }) => (
+            <Link key={label} href={href} className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition ${href === activePath ? "bg-votely-lavender text-votely-purple" : "text-slate-500 hover:bg-slate-50 hover:text-votely-ink"}`}>
               <Icon size={19} /> {label}
             </Link>
           ))}
