@@ -1,2 +1,5 @@
-import { FeedPage } from '@/components/votely/feed-page'
-export default function HomePage() { return <FeedPage /> }
+import { VotelyApp } from "@/components/votely/app-shell";
+
+export default function HomePage() {
+  return <VotelyApp />;
+}
