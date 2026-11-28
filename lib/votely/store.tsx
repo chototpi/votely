@@ -28,7 +28,6 @@ import {
 export const VOTE_COST = 0;
 export const POST_COST = 1;
 export const AD_REWARD = 1;
-const WELCOME_VT = 3;
 
 interface Data {
   vt: number;
@@ -74,7 +73,6 @@ interface VotelyContextValue {
   addComment: (pollId: string, text: string, parentId: string | null) => ActionResult;
   openAd: () => void;
   closeAd: () => void;
-  completeAd: () => void;
   promptEarn: (reason: string) => void;
   dismissEarnPrompt: () => void;
   refresh: () => Promise<void>;
@@ -181,7 +179,6 @@ export function VotelyProvider({ children }: { children: ReactNode }) {
       .then((slices) => {
         if (cancelled) return;
         const { data: loaded, isNewUser } = parseData(slices);
-        if (isNewUser) { const welcome = withLedger({ ...loaded, vt: 0 }, "earn", WELCOME_VT, "Welcome gift for joining Votely"); Object.assign(loaded, welcome); }
         dataRef.current = loaded;
         setData(loaded);
         saverRef.current = createSaver({
@@ -261,11 +258,6 @@ export function VotelyProvider({ children }: { children: ReactNode }) {
     setAdOpen(true);
   }, []);
   const closeAd = useCallback(() => setAdOpen(false), []);
-
-  const completeAd = useCallback(() => {
-    setAdOpen(false);
-    toast("Reward ads are not connected yet. No VT has been credited.");
-  }, []);
 
   const requestVote = useCallback(
     (pollId: string, optionId: string) => {
@@ -534,7 +526,6 @@ export function VotelyProvider({ children }: { children: ReactNode }) {
       addComment,
       openAd,
       closeAd,
-      completeAd,
       promptEarn,
       dismissEarnPrompt,
       refresh,
@@ -562,7 +553,6 @@ export function VotelyProvider({ children }: { children: ReactNode }) {
       addComment,
       openAd,
       closeAd,
-      completeAd,
       promptEarn,
       dismissEarnPrompt,
       refresh,

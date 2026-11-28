@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { Check, Coins, Tv } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +18,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { Progress } from "@/components/ui/progress";
 import { AD_REWARD, useVotely } from "@/lib/votely/store";
 
 export function VoteConfirmDrawer() {
@@ -91,42 +90,24 @@ export function EarnPromptDrawer() {
   );
 }
 
-const AD_SECONDS = 5;
-
 export function AdDialog() {
-  const { adOpen, closeAd, completeAd } = useVotely();
-  const [elapsed, setElapsed] = useState(0);
-
-  useEffect(() => {
-    if (!adOpen) return;
-    setElapsed(0);
-    const timer = setInterval(() => {
-      setElapsed((value) => Math.min(value + 1, AD_SECONDS));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [adOpen]);
-
-  const done = elapsed >= AD_SECONDS;
+  const { adOpen, closeAd } = useVotely();
 
   return (
     <Dialog open={adOpen} onOpenChange={(open) => !open && closeAd()}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Sponsored message</DialogTitle>
+          <DialogTitle>Pi rewarded ads</DialogTitle>
           <DialogDescription>
-            This is a simulated ad. Watch it to the end to earn {AD_REWARD} VT.
+            Rewarded ads will open through the official Pi SDK. VT is credited only after the server verifies the ad with Pi.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex aspect-video flex-col items-center justify-center gap-2 rounded-xl bg-secondary text-center">
-          <Tv className="size-8 text-primary" aria-hidden="true" />
-          <span className="text-sm font-medium text-secondary-foreground">
-            {done ? "Thanks for watching" : "Your ad is playing"}
-          </span>
+        <div className="flex aspect-video flex-col items-center justify-center gap-3 rounded-xl bg-secondary px-5 text-center">
+          <Tv className="size-9 text-primary" aria-hidden="true" />
+          <span className="text-sm font-semibold text-secondary-foreground">Pi Ads connection is being prepared</span>
+          <span className="text-xs text-muted-foreground">No simulated ad or automatic VT reward is used.</span>
         </div>
-        <Progress value={(elapsed / AD_SECONDS) * 100} aria-label="Ad progress" />
-        <Button size="lg" disabled={!done} onClick={completeAd}>
-          {done ? `Collect ${AD_REWARD} VT` : `Reward in ${AD_SECONDS - elapsed}s`}
-        </Button>
+        <Button size="lg" variant="outline" onClick={closeAd}>Close</Button>
       </DialogContent>
     </Dialog>
   );
