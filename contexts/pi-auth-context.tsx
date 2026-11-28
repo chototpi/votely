@@ -67,7 +67,6 @@ export function PiAuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [authMessage, setAuthMessage] = useState("");
   const [hasError, setHasError] = useState(false);
-  const [hasError, setHasError] = useState(false);
 
   const acceptToken = useCallback(async (token: string) => {
     setIsLoading(true);
