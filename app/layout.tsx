@@ -1,24 +1,48 @@
-import { Analytics } from '@vercel/analytics/next'
-import type { Metadata, Viewport } from 'next'
-import { AppShell } from '@/components/votely/ui'
-import './globals.css'
+import type React from "react";
+import type { Metadata, Viewport } from "next";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
+import { Bricolage_Grotesque } from "next/font/google";
+import { AppWrapper } from "@/components/app-wrapper";
+import "./globals.css";
+
+const headingFont = Bricolage_Grotesque({
+  subsets: ["latin"],
+  variable: "--font-heading-src",
+});
 
 export const metadata: Metadata = {
-  title: { default: 'Votely — Your voice, in the conversation', template: '%s · Votely' },
-  description: 'A global community for thoughtful polls, perspectives, and conversations.',
-  applicationName: 'Votely',
-  icons: { icon: '/icon.svg', apple: '/apple-icon.png' },
-}
+  title: "Made with App Studio",
+  description:
+    "Votely is a social polling platform for the Pi Network community. Create polls, vote, and discuss.",
+    generator: 'v0.app'
+};
 
 export const viewport: Viewport = {
-  colorScheme: 'light',
-  themeColor: '#f8f8fc',
-  width: 'device-width',
+  themeColor: "#f4f8fb",
+  width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-}
+};
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body className="antialiased"><AppShell>{children}</AppShell>{process.env.NODE_ENV === 'production' && <Analytics />}</body></html>
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en" className="bg-background">
+      <head>
+        <style>{`
+html {
+  font-family: ${GeistSans.style.fontFamily};
+  --font-sans: ${GeistSans.variable};
+  --font-mono: ${GeistMono.variable};
+}
+        `}</style>
+      </head>
+      <body className={headingFont.variable}>
+        <AppWrapper>{children}</AppWrapper>
+      </body>
+    </html>
+  );
 }
