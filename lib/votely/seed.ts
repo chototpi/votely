@@ -18,6 +18,7 @@ function poll(
     category,
     authorName,
     createdAt: NOW - ageMinutes * MIN,
+    endsAt: NOW + 7 * 24 * 60 * MIN,
     boost,
     options: options.map(([text, votes], i) => ({ id: `${id}-o${i + 1}`, text, votes })),
   };

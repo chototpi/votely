@@ -28,7 +28,7 @@ import {
 export const VOTE_COST = 0;
 export const POST_COST = 1;
 export const AD_REWARD = 1;
-const WELCOME_VT = 0;
+const WELCOME_VT = 3;
 
 interface Data {
   vt: number;
@@ -70,6 +70,7 @@ interface VotelyContextValue {
   cancelVote: () => void;
   createPoll: (input: NewPollInput) => ActionResult;
   boostPoll: (pollId: string, amount: number) => ActionResult;
+  extendPoll: (pollId: string, days: number) => ActionResult;
   addComment: (pollId: string, text: string, parentId: string | null) => ActionResult;
   openAd: () => void;
   closeAd: () => void;
@@ -180,6 +181,7 @@ export function VotelyProvider({ children }: { children: ReactNode }) {
       .then((slices) => {
         if (cancelled) return;
         const { data: loaded, isNewUser } = parseData(slices);
+        if (isNewUser) { const welcome = withLedger({ ...loaded, vt: 0 }, "earn", WELCOME_VT, "Welcome gift for joining Votely"); Object.assign(loaded, welcome); }
         dataRef.current = loaded;
         setData(loaded);
         saverRef.current = createSaver({
@@ -328,6 +330,7 @@ export function VotelyProvider({ children }: { children: ReactNode }) {
       if (options.length < LIMITS.minOptions) {
         return { ok: false, reason: "Add at least two different answer options." };
       }
+      if (!Number.isFinite(input.endsAt) || input.endsAt <= Date.now()) return { ok: false, reason: "Choose a closing date and time in the future." };
 
       const cost = POST_COST + boost;
       if (current.vt < cost) {
@@ -405,6 +408,25 @@ export function VotelyProvider({ children }: { children: ReactNode }) {
     [user, login, commit, announce],
   );
 
+  const extendPoll = useCallback(
+    (pollId: string, days: number): ActionResult => {
+      if (!user) { toast("Sign in with Pi to extend a poll."); void login(); return { ok: false, reason: "Please sign in with Pi first." }; }
+      const current = dataRef.current;
+      const poll = current.polls.find((item) => item.id === pollId);
+      const count = Math.floor(days);
+      if (!poll || poll.authorName !== me) return { ok: false, reason: "Only the poll creator can extend this poll." };
+      if (!Number.isFinite(count) || count < 1 || count > 30) return { ok: false, reason: "Choose between 1 and 30 extra days." };
+      const cost = count;
+      if (current.vt < cost) { setEarnPrompt(`Extending this poll costs ${cost} VT and your balance is ${current.vt} VT.`); return { ok: false, reason: "Not enough VT." }; }
+      const base = Math.max(Date.now(), poll.endsAt);
+      const ledger = withLedger(current, "spend", cost, `Extended poll by ${count} day${count === 1 ? "" : "s"}`);
+      commit({ ...current, ...ledger, polls: current.polls.map((item) => item.id === pollId ? { ...item, endsAt: base + count * 24 * 60 * 60 * 1000 } : item) }, ["wallet", "polls"]);
+      toast.success(`Poll extended by ${count} day${count === 1 ? "" : "s"}.`);
+      return { ok: true };
+    },
+    [user, login, me, commit],
+  );
+
   const addComment = useCallback(
     (pollId: string, text: string, parentId: string | null): ActionResult => {
       if (!user) {
@@ -465,6 +487,8 @@ export function VotelyProvider({ children }: { children: ReactNode }) {
       const ageHours = (now - poll.createdAt) / 3_600_000;
       return {
         ...poll,
+        isClosed: poll.endsAt <= now,
+        daysRemaining: Math.max(0, Math.ceil((poll.endsAt - now) / (24 * 60 * 60 * 1000))),
         options: counted.map((option) => ({
           ...option,
           percent: total > 0 ? Math.round((option.votes / total) * 100) : 0,
@@ -505,6 +529,7 @@ export function VotelyProvider({ children }: { children: ReactNode }) {
       cancelVote,
       createPoll,
       boostPoll,
+      extendPoll,
       addComment,
       openAd,
       closeAd,
@@ -532,6 +557,7 @@ export function VotelyProvider({ children }: { children: ReactNode }) {
       cancelVote,
       createPoll,
       boostPoll,
+      extendPoll,
       addComment,
       openAd,
       closeAd,

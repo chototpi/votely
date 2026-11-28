@@ -35,6 +35,7 @@ export interface Poll {
   category: Category | null;
   authorName: string;
   createdAt: number;
+  endsAt: number;
   boost: number;
   coverImage?: string | null;
   galleryImages?: string[];
@@ -67,6 +68,8 @@ export interface PollView extends Omit<Poll, "options"> {
   myVote: string | null;
   commentCount: number;
   score: number;
+  isClosed: boolean;
+  daysRemaining: number;
 }
 
 export interface NewPollInput {
@@ -76,6 +79,7 @@ export interface NewPollInput {
   boost: number;
   coverImage?: string | null;
   galleryImages?: string[];
+  endsAt: number;
 }
 
 export type ActionResult = { ok: true; id?: string } | { ok: false; reason: string };

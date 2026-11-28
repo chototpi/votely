@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Coins, Rocket } from "lucide-react";
+import { ArrowLeft, CalendarClock, Coins, Rocket } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { pluralize, timeAgo } from "@/lib/votely/format";
 import { useNav } from "@/lib/votely/nav";
 import { useVotely } from "@/lib/votely/store";
 import { LIMITS } from "@/lib/votely/types";
+import { useState } from "react";
 
 export function BackBar({ label }: { label: string }) {
   const { back } = useNav();
@@ -25,7 +26,8 @@ export function BackBar({ label }: { label: string }) {
 }
 
 export function PollDetail({ pollId }: { pollId: string }) {
-  const { pollsById, me, boostPoll } = useVotely();
+  const { pollsById, me, boostPoll, extendPoll, vt } = useVotely();
+  const [extensionDays, setExtensionDays] = useState(1);
   const poll = pollsById.get(pollId);
 
   if (!poll) {
@@ -41,6 +43,11 @@ export function PollDetail({ pollId }: { pollId: string }) {
 
   const isOwn = poll.authorName === me;
   const votedOption = poll.options.find((o) => o.id === poll.myVote);
+
+  function handleExtend() {
+    const result = extendPoll(pollId, extensionDays);
+    if (!result.ok && result.reason !== "Not enough VT.") toast.error(result.reason);
+  }
 
   function handleBoost() {
     const result = boostPoll(pollId, 1);
@@ -61,6 +68,7 @@ export function PollDetail({ pollId }: { pollId: string }) {
                 Boost {poll.boost}
               </Badge>
             )}
+            {poll.isClosed ? <Badge variant="secondary">Closed</Badge> : <Badge variant="outline">{poll.daysRemaining <= 1 ? "Ends today" : `${poll.daysRemaining} days left`}</Badge>}
             <time dateTime={new Date(poll.createdAt).toISOString()}>{timeAgo(poll.createdAt)}</time>
           </div>
         </header>
@@ -94,6 +102,21 @@ export function PollDetail({ pollId }: { pollId: string }) {
             </span>
           )}
         </div>
+
+        {isOwn && (
+          <section className="flex flex-col gap-3 rounded-xl border bg-secondary p-3">
+            <div className="flex items-center gap-2">
+              <CalendarClock className="size-4" />
+              <div><p className="text-sm font-semibold">Extend poll duration</p><p className="text-xs text-muted-foreground">1 VT per extra day · Balance: {vt} VT</p></div>
+            </div>
+            <div className="flex items-center gap-2">
+              <select aria-label="Extra days" value={extensionDays} onChange={(event) => setExtensionDays(Number(event.target.value))} className="h-9 flex-1 rounded-md border bg-background px-3 text-sm">
+                {[1, 2, 3, 7, 14, 30].map((days) => <option key={days} value={days}>{days} {days === 1 ? "day" : "days"} · {days} VT</option>)}
+              </select>
+              <Button size="sm" onClick={handleExtend} disabled={vt < extensionDays}>Extend</Button>
+            </div>
+          </section>
+        )}
 
         {isOwn && (
           <div className="flex items-center justify-between gap-3 rounded-xl bg-secondary p-3">

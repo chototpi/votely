@@ -8,6 +8,7 @@ import type { PollView } from "@/lib/votely/types";
 
 export function PollOptions({ poll }: { poll: PollView }) {
   const { requestVote } = useVotely();
+  const isClosed = poll.endsAt <= Date.now();
   const hasVoted = poll.myVote !== null;
   const showResults = hasVoted;
   const leadingVotes = Math.max(...poll.options.map((o) => o.votes));
@@ -21,7 +22,7 @@ export function PollOptions({ poll }: { poll: PollView }) {
           <li key={option.id}>
             <button
               type="button"
-              disabled={isMine}
+              disabled={isMine || isClosed}
               onClick={() => requestVote(poll.id, option.id)}
               aria-label={
                 hasVoted
@@ -30,7 +31,8 @@ export function PollOptions({ poll }: { poll: PollView }) {
               }
               className={cn(
                 "relative w-full overflow-hidden rounded-xl border bg-card text-left transition-colors",
-                !isMine && "hover:border-primary/60 active:scale-[0.99]",
+                !isMine && !isClosed && "hover:border-primary/60 active:scale-[0.99]",
+                isClosed && "cursor-not-allowed opacity-75",
                 isMine && "border-primary",
               )}
             >
@@ -71,7 +73,8 @@ export function PollOptions({ poll }: { poll: PollView }) {
           </li>
         );
       })}
-      {!hasVoted && <li className="px-1 text-[11px] text-muted-foreground">Vote to reveal the results. You can change your vote later.</li>}
+      {!hasVoted && !isClosed && <li className="px-1 text-[11px] text-muted-foreground">Vote to reveal the results. You can change your vote later.</li>}
+      {isClosed && <li className="px-1 text-[11px] font-medium text-muted-foreground">This poll has closed. Voting and vote changes are no longer available.</li>}
       {hasVoted && <li className="px-1 text-[11px] text-muted-foreground">Your vote is counted. Select another option to change it.</li>}
     </ul>
   );

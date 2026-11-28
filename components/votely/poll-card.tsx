@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock3, MessageCircle, Rocket, Vote } from "lucide-react";
+import { CalendarClock, Clock3, MessageCircle, Rocket, Vote } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { PollOptions } from "@/components/votely/poll-options";
 import { UserLink } from "@/components/votely/user";
@@ -22,6 +22,7 @@ export function PollCard({ poll }: { poll: PollView }) {
               Sponsored
             </Badge>
           )}
+          {poll.isClosed ? <Badge variant="secondary">Closed</Badge> : <Badge variant="outline" className="gap-1"><CalendarClock className="size-3" />{poll.daysRemaining <= 1 ? "Ends today" : `${poll.daysRemaining} days left`}</Badge>}
           <time dateTime={new Date(poll.createdAt).toISOString()}>{timeAgo(poll.createdAt)}</time>
         </div>
       </header>

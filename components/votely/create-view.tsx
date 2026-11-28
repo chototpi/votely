@@ -18,6 +18,7 @@ export function CreateView() {
   const [options, setOptions] = useState(["", ""]);
   const [category, setCategory] = useState<Category | null>(null);
   const [boost, setBoost] = useState(0);
+  const [endsAtLocal, setEndsAtLocal] = useState(() => { const date = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); date.setMinutes(date.getMinutes() - date.getTimezoneOffset()); return date.toISOString().slice(0, 16); });
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const coverInput = useRef<HTMLInputElement>(null);
@@ -83,7 +84,7 @@ export function CreateView() {
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
-    const result = createPoll({ question, options, category, boost, coverImage, galleryImages });
+    const result = createPoll({ question, options, category, boost, coverImage, galleryImages, endsAt: new Date(endsAtLocal).getTime() });
     if (!result.ok) {
       if (result.reason !== "Not enough VT.") toast.error(result.reason);
       return;
@@ -149,6 +150,12 @@ export function CreateView() {
         </div>
         {galleryImages.length > 0 && <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{galleryImages.map((image, index) => <div key={`${index}-${image.length}`} className="relative overflow-hidden rounded-lg border"><img src={image} alt={`Gallery preview ${index + 1}`} className="aspect-square w-full object-cover" /><button type="button" aria-label={`Remove gallery image ${index + 1}`} onClick={() => setGalleryImages((items) => items.filter((_, i) => i !== index))} className="absolute right-1 top-1 flex size-7 items-center justify-center rounded-full bg-black/65 text-white"><X className="size-4" /></button></div>)}</div>}
         <p className="text-[11px] leading-relaxed text-muted-foreground">Images are resized in your browser for this frontend demo. Real image hosting and upload security will be implemented with the backend.</p>
+      </section>
+
+      <section className="flex flex-col gap-2 rounded-2xl border bg-card p-4">
+        <label htmlFor="poll-ends-at" className="text-sm font-semibold">Poll closing date and time</label>
+        <p className="text-xs text-muted-foreground">Your poll will automatically close at this time. You can extend it later for 1 VT per extra day.</p>
+        <Input id="poll-ends-at" type="datetime-local" value={endsAtLocal} min={new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16)} onChange={(event) => setEndsAtLocal(event.target.value)} required className="bg-background" />
       </section>
 
       <fieldset className="flex flex-col gap-2">
