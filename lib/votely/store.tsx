@@ -117,7 +117,7 @@ function parseData(slices: Record<Slice, Record<string, unknown> | null>): {
       ? (slices.votes.map as Record<string, string>)
       : {},
     polls: isRecord(slices.polls) && Array.isArray(slices.polls.list)
-      ? (slices.polls.list as Poll[])
+      ? (slices.polls.list as Poll[]).map((poll) => ({ ...poll, endsAt: Number.isFinite(poll.endsAt) ? poll.endsAt : (poll.createdAt ?? Date.now()) + 7 * 24 * 60 * 60 * 1000 }))
       : [],
     comments: isRecord(slices.comments) && Array.isArray(slices.comments.list)
       ? (slices.comments.list as PollComment[])
@@ -345,6 +345,7 @@ export function VotelyProvider({ children }: { children: ReactNode }) {
         category: input.category && CATEGORIES.includes(input.category) ? input.category : null,
         authorName: me,
         createdAt: Date.now(),
+        endsAt: input.endsAt,
         boost,
         coverImage: input.coverImage ?? null,
         galleryImages: (input.galleryImages ?? []).slice(0, 4),
