@@ -13,6 +13,7 @@ import { ProfileView } from "@/components/votely/profile-view";
 import { SearchView } from "@/components/votely/search-view";
 import { WalletView } from "@/components/votely/wallet-view";
 import { cn } from "@/lib/utils";
+import { usePiAuth } from "@/contexts/pi-auth-context";
 import { NavProvider, useNav, type Tab } from "@/lib/votely/nav";
 import { useVotely, VotelyProvider } from "@/lib/votely/store";
 
@@ -57,9 +58,10 @@ function VtChip() {
 
 function Header() {
   const { setTab } = useNav();
+  const { user, isAuthenticated, isLoading, login, logout } = usePiAuth();
   return (
     <header className="sticky top-0 z-30 border-b bg-background/90 backdrop-blur">
-      <div className="mx-auto flex h-14 w-full max-w-xl items-center justify-between px-4">
+      <div className="mx-auto flex h-14 w-full max-w-xl items-center justify-between gap-2 px-4">
         <button
           type="button"
           onClick={() => setTab("home")}
@@ -71,7 +73,26 @@ function Header() {
           </span>
           <span className="font-heading text-xl font-extrabold">Votely</span>
         </button>
-        <VtChip />
+        <div className="flex items-center gap-2">
+          {isAuthenticated ? (
+            <>
+              <span className="max-w-24 truncate text-xs font-semibold text-muted-foreground">@{user?.username}</span>
+              <button type="button" onClick={logout} className="rounded-full border px-3 py-1.5 text-xs font-semibold">
+                Đăng xuất
+              </button>
+              <VtChip />
+            </>
+          ) : (
+            <button
+              type="button"
+              disabled={isLoading}
+              onClick={() => void login()}
+              className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-60"
+            >
+              {isLoading ? "Đang tải..." : "Đăng nhập Pi"}
+            </button>
+          )}
+        </div>
       </div>
     </header>
   );

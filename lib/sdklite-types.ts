@@ -85,6 +85,12 @@ declare global {
         scopes: string[],
         onIncompletePaymentFound: (payment: unknown) => void,
       ) => Promise<PiAuthResult>;
+      signIn?: (options: {
+        clientId: string;
+        redirectUri: string;
+        scopes?: string[];
+        state?: string;
+      }) => void;
     };
   }
 }

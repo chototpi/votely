@@ -25,10 +25,10 @@ import {
   type PollView,
 } from "./types";
 
-export const VOTE_COST = 1;
+export const VOTE_COST = 0;
 export const POST_COST = 1;
 export const AD_REWARD = 1;
-const WELCOME_VT = 3;
+const WELCOME_VT = 0;
 
 interface Data {
   vt: number;
@@ -90,16 +90,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function emptyData(): Data {
   return {
-    vt: WELCOME_VT,
-    ledger: [welcomeEntry()],
+    vt: 0,
+    ledger: [],
     votes: {},
     polls: [],
     comments: [],
   };
-}
-
-function welcomeEntry(): LedgerEntry {
-  return { id: newId("tx"), kind: "earn", amount: WELCOME_VT, label: "Welcome bonus", at: Date.now() };
 }
 
 function parseData(slices: Record<Slice, Record<string, unknown> | null>): {
@@ -151,7 +147,7 @@ function withLedger(data: Data, kind: "earn" | "spend", amount: number, label: s
 }
 
 export function VotelyProvider({ children }: { children: ReactNode }) {
-  const { user } = usePiAuth();
+  const { user, login } = usePiAuth();
   const me = user?.username ?? "you";
   const persistent = Boolean(user);
 
@@ -180,13 +176,14 @@ export function VotelyProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    loadSlices()
+    loadSlices(user!.uid)
       .then((slices) => {
         if (cancelled) return;
         const { data: loaded, isNewUser } = parseData(slices);
         dataRef.current = loaded;
         setData(loaded);
         saverRef.current = createSaver({
+          uid: user!.uid,
           read: (slice) => serialize(slice, dataRef.current),
           onFailure: () =>
             toast.error("Couldn't save your latest changes", {
@@ -207,7 +204,7 @@ export function VotelyProvider({ children }: { children: ReactNode }) {
       saverRef.current?.dispose();
       saverRef.current = null;
     };
-  }, [persistent, loadAttempt]);
+  }, [persistent, user?.uid, loadAttempt]);
 
   useEffect(() => {
     const onHide = () => {
@@ -265,13 +262,16 @@ export function VotelyProvider({ children }: { children: ReactNode }) {
 
   const completeAd = useCallback(() => {
     setAdOpen(false);
-    const ledger = withLedger(dataRef.current, "earn", AD_REWARD, "Watched an ad");
-    commit({ ...dataRef.current, ...ledger }, ["wallet"]);
-    announce(AD_REWARD, "Thanks for watching.");
-  }, [commit, announce]);
+    toast("Reward ads are not connected yet. No VT has been credited.");
+  }, []);
 
   const requestVote = useCallback(
     (pollId: string, optionId: string) => {
+      if (!user) {
+        toast("Sign in with Pi to vote.");
+        void login();
+        return;
+      }
       const current = dataRef.current;
       if (current.votes[pollId]) return;
       if (current.vt < VOTE_COST) {
@@ -280,7 +280,7 @@ export function VotelyProvider({ children }: { children: ReactNode }) {
       }
       setPendingVote({ pollId, optionId });
     },
-    [],
+    [user, login],
   );
 
   const cancelVote = useCallback(() => setPendingVote(null), []);
@@ -294,20 +294,23 @@ export function VotelyProvider({ children }: { children: ReactNode }) {
       setEarnPrompt(`Voting costs ${VOTE_COST} VT and your balance is ${current.vt} VT.`);
       return;
     }
-    const ledger = withLedger(current, "spend", VOTE_COST, "Voted on a poll");
     commit(
       {
         ...current,
-        ...ledger,
         votes: { ...current.votes, [pendingVote.pollId]: pendingVote.optionId },
       },
-      ["wallet", "votes"],
+      ["votes"],
     );
-    announce(-VOTE_COST, "Your vote is in. Results are live.");
+    toast.success("Your vote is in. Results are live.");
   }, [pendingVote, commit, announce]);
 
   const createPoll = useCallback(
     (input: NewPollInput): ActionResult => {
+      if (!user) {
+        toast("Sign in with Pi to create a poll.");
+        void login();
+        return { ok: false, reason: "Please sign in with Pi first." };
+      }
       const current = dataRef.current;
       const question = input.question.trim();
       const seen = new Set<string>();
@@ -364,11 +367,16 @@ export function VotelyProvider({ children }: { children: ReactNode }) {
       announce(-cost, boost > 0 ? "Your poll is live and boosted." : "Your poll is live.");
       return { ok: true, id };
     },
-    [me, commit, announce],
+    [me, user, login, commit, announce],
   );
 
   const boostPoll = useCallback(
     (pollId: string, amount: number): ActionResult => {
+      if (!user) {
+        toast("Sign in with Pi to promote a poll.");
+        void login();
+        return { ok: false, reason: "Please sign in with Pi first." };
+      }
       const current = dataRef.current;
       const poll = current.polls.find((p) => p.id === pollId);
       if (!poll) return { ok: false, reason: "Only your own polls can be boosted." };
@@ -392,11 +400,16 @@ export function VotelyProvider({ children }: { children: ReactNode }) {
       announce(-amount, "Your poll will show up higher in the feed.");
       return { ok: true };
     },
-    [commit, announce],
+    [user, login, commit, announce],
   );
 
   const addComment = useCallback(
     (pollId: string, text: string, parentId: string | null): ActionResult => {
+      if (!user) {
+        toast("Sign in with Pi to comment.");
+        void login();
+        return { ok: false, reason: "Please sign in with Pi first." };
+      }
       const current = dataRef.current;
       const body = text.trim().slice(0, LIMITS.comment);
       if (!body) return { ok: false, reason: "Write something first." };
@@ -423,7 +436,7 @@ export function VotelyProvider({ children }: { children: ReactNode }) {
       );
       return { ok: true, id: entry.id };
     },
-    [me, commit],
+    [me, user, login, commit],
   );
 
   const refresh = useCallback(async () => {

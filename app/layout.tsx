@@ -12,10 +12,10 @@ const headingFont = Bricolage_Grotesque({
 });
 
 export const metadata: Metadata = {
-  title: "Made with App Studio",
+  title: "Votely",
   description:
     "Votely is a social polling platform for the Pi Network community. Create polls, vote, and discuss.",
-    generator: 'v0.app'
+    generator: 'Next.js'
 };
 
 export const viewport: Viewport = {
