@@ -1,10 +1,19 @@
 "use client";
 
-import { Check, Coins, House, PlusCircle, Search, User } from "lucide-react";
+import { Check, Coins, House, PlusCircle, Search, User, ChevronDown, LogOut } from "lucide-react";
 import type { ComponentType } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Toaster } from "@/components/ui/sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { UserAvatar } from "@/components/votely/user";
 import { CreateView } from "@/components/votely/create-view";
 import { FeedView } from "@/components/votely/feed-view";
 import { AdDialog, EarnPromptDrawer, VoteConfirmDrawer } from "@/components/votely/overlays";
@@ -25,40 +34,11 @@ const TABS: { id: Tab; label: string; icon: ComponentType<{ className?: string }
   { id: "profile", label: "Profile", icon: User },
 ];
 
-function VtChip() {
-  const { vt, flash } = useVotely();
-  const { setTab } = useNav();
-
-  return (
-    <button
-      type="button"
-      onClick={() => setTab("wallet")}
-      aria-label={`Your balance is ${vt} VT. Open wallet`}
-      className="relative flex items-center gap-2 rounded-full bg-accent py-1.5 pl-2 pr-3.5 text-accent-foreground"
-    >
-      <Coins className="size-4" aria-hidden="true" />
-      <span key={vt} className="animate-vt-pop font-heading text-sm font-bold tabular-nums">
-        {vt} VT
-      </span>
-      {flash && (
-        <span
-          key={flash.id}
-          aria-hidden="true"
-          className={cn(
-            "animate-float-up pointer-events-none absolute -bottom-1 right-2 text-sm font-bold",
-            flash.delta > 0 ? "text-primary" : "text-muted-foreground",
-          )}
-        >
-          {flash.delta > 0 ? `+${flash.delta}` : flash.delta}
-        </span>
-      )}
-    </button>
-  );
-}
-
 function Header() {
   const { setTab } = useNav();
   const { user, isAuthenticated, isLoading, login, logout } = usePiAuth();
+  const { vt } = useVotely();
+
   return (
     <header className="sticky top-0 z-30 border-b bg-background/90 backdrop-blur">
       <div className="mx-auto flex h-14 w-full max-w-xl items-center justify-between gap-2 px-4">
@@ -73,24 +53,56 @@ function Header() {
           </span>
           <span className="font-heading text-xl font-extrabold">Votely</span>
         </button>
+
         <div className="flex items-center gap-2">
-          {isAuthenticated ? (
-            <>
-              <span className="max-w-24 truncate text-xs font-semibold text-muted-foreground">@{user?.username}</span>
-              <button type="button" onClick={logout} className="rounded-full border px-3 py-1.5 text-xs font-semibold">
-                Đăng xuất
-              </button>
-              <VtChip />
-            </>
+          {isAuthenticated && user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="h-10 max-w-[190px] gap-2 rounded-full px-2.5"
+                  aria-label={`Tài khoản ${user.username}, mở menu`}
+                >
+                  <UserAvatar name={user.username} size="sm" />
+                  <span className="max-w-28 truncate text-sm font-semibold">@{user.username}</span>
+                  <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" sideOffset={8} className="w-60">
+                <DropdownMenuLabel className="font-normal">
+                  <span className="block text-sm font-semibold">@{user.username}</span>
+                  <span className="mt-1 block text-xs text-muted-foreground">Tài khoản Pi Network</span>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => setTab("profile")} className="gap-2">
+                  <User className="size-4" aria-hidden="true" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setTab("wallet")} className="gap-2">
+                  <Coins className="size-4" aria-hidden="true" />
+                  <span className="flex-1">Vote Point</span>
+                  <span className="text-xs font-semibold text-muted-foreground">{vt} VT</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onSelect={logout}
+                  className="gap-2 text-destructive focus:text-destructive"
+                >
+                  <LogOut className="size-4" aria-hidden="true" />
+                  <span>Logout</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
-            <button
+            <Button
               type="button"
               disabled={isLoading}
               onClick={() => void login()}
-              className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-60"
+              className="rounded-full px-4 text-xs font-semibold"
             >
               {isLoading ? "Đang tải..." : "Đăng nhập Pi"}
-            </button>
+            </Button>
           )}
         </div>
       </div>
