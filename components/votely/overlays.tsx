@@ -19,23 +19,24 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Progress } from "@/components/ui/progress";
-import { AD_REWARD, useVotely, VOTE_COST } from "@/lib/votely/store";
+import { AD_REWARD, useVotely } from "@/lib/votely/store";
 
 export function VoteConfirmDrawer() {
-  const { pendingVote, pollsById, vt, confirmVote, cancelVote } = useVotely();
+  const { pendingVote, pollsById, confirmVote, cancelVote } = useVotely();
   const lastPending = useRef(pendingVote);
   if (pendingVote) lastPending.current = pendingVote;
 
   const shown = pendingVote ?? lastPending.current;
   const poll = shown ? pollsById.get(shown.pollId) : undefined;
   const option = poll?.options.find((o) => o.id === shown?.optionId);
+  const isChangingVote = Boolean(poll?.myVote);
 
   return (
     <Drawer open={pendingVote !== null} onOpenChange={(open) => !open && cancelVote()}>
       <DrawerContent>
         <div className="mx-auto w-full max-w-xl">
           <DrawerHeader>
-            <DrawerTitle>Confirm your vote</DrawerTitle>
+            <DrawerTitle>{isChangingVote ? "Change your vote" : "Confirm your vote"}</DrawerTitle>
             <DrawerDescription>{poll?.question}</DrawerDescription>
           </DrawerHeader>
           <div className="flex flex-col gap-3 px-4">
@@ -43,23 +44,11 @@ export function VoteConfirmDrawer() {
               <Check className="size-5 shrink-0 text-primary" aria-hidden="true" />
               <span className="text-sm font-semibold">{option?.text}</span>
             </div>
-            <div className="flex flex-col gap-1.5 rounded-xl bg-secondary p-3 text-sm">
-              <div className="flex justify-between">
-                <span>Cost</span>
-                <span className="font-semibold tabular-nums">{VOTE_COST} VT</span>
-              </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>Balance after voting</span>
-                <span className="tabular-nums">
-                  {vt} VT to {Math.max(0, vt - VOTE_COST)} VT
-                </span>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground">Each poll allows one vote and it can&apos;t be changed.</p>
+            <p className="text-xs text-muted-foreground">{isChangingVote ? "Your previous choice will be replaced with this one." : "Voting is free. You can change your choice later while the poll is open."}</p>
           </div>
           <DrawerFooter>
             <Button size="lg" onClick={confirmVote}>
-              Vote for {VOTE_COST} VT
+              {isChangingVote ? "Update vote" : "Submit vote"}
             </Button>
             <Button variant="ghost" onClick={cancelVote}>
               Cancel

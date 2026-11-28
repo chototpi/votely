@@ -36,6 +36,8 @@ export interface Poll {
   authorName: string;
   createdAt: number;
   boost: number;
+  coverImage?: string | null;
+  galleryImages?: string[];
 }
 
 export interface PollComment {
@@ -72,6 +74,8 @@ export interface NewPollInput {
   options: string[];
   category: Category | null;
   boost: number;
+  coverImage?: string | null;
+  galleryImages?: string[];
 }
 
 export type ActionResult = { ok: true; id?: string } | { ok: false; reason: string };

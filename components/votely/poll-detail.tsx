@@ -9,7 +9,7 @@ import { PollOptions } from "@/components/votely/poll-options";
 import { UserLink } from "@/components/votely/user";
 import { pluralize, timeAgo } from "@/lib/votely/format";
 import { useNav } from "@/lib/votely/nav";
-import { useVotely, VOTE_COST } from "@/lib/votely/store";
+import { useVotely } from "@/lib/votely/store";
 import { LIMITS } from "@/lib/votely/types";
 
 export function BackBar({ label }: { label: string }) {
@@ -25,7 +25,7 @@ export function BackBar({ label }: { label: string }) {
 }
 
 export function PollDetail({ pollId }: { pollId: string }) {
-  const { pollsById, me, vt, boostPoll } = useVotely();
+  const { pollsById, me, boostPoll } = useVotely();
   const poll = pollsById.get(pollId);
 
   if (!poll) {
@@ -74,6 +74,13 @@ export function PollDetail({ pollId }: { pollId: string }) {
           <h1 className="font-heading text-2xl font-bold leading-snug text-balance">{poll.question}</h1>
         </div>
 
+        {poll.coverImage && <img src={poll.coverImage} alt="Poll cover" className="aspect-[16/9] w-full rounded-xl border object-cover" />}
+        {poll.galleryImages && poll.galleryImages.length > 0 && (
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label="Poll image gallery">
+            {poll.galleryImages.slice(0, 4).map((image, index) => <img key={`${poll.id}-detail-${index}`} src={image} alt={`Poll gallery ${index + 1}`} className="aspect-square w-full rounded-lg border object-cover" loading="lazy" />)}
+          </div>
+        )}
+
         <PollOptions poll={poll} />
 
         <div className="flex flex-col gap-1 text-sm text-muted-foreground" aria-live="polite">
@@ -83,7 +90,7 @@ export function PollDetail({ pollId }: { pollId: string }) {
           ) : (
             <span className="flex items-center gap-1.5">
               <Coins className="size-4 text-accent-foreground" aria-hidden="true" />
-              Voting costs {VOTE_COST} VT. You have {vt} VT.
+              Voting is free. You can change your vote while this poll is open.
             </span>
           )}
         </div>

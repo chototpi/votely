@@ -146,20 +146,20 @@ function CurrentView() {
   const { tab, route } = useNav();
   const { me } = useVotely();
 
-  if (route?.type === "poll") return <PollDetail key={route.id} pollId={route.id} />;
-  if (route?.type === "user") return <ProfileView key={route.name} name={route.name} showBack />;
+  if (route?.type === "poll") return <div className="mx-auto w-full max-w-xl"><PollDetail key={route.id} pollId={route.id} /></div>;
+  if (route?.type === "user") return <div className="mx-auto w-full max-w-xl"><ProfileView key={route.name} name={route.name} showBack /></div>;
 
   switch (tab) {
     case "home":
       return <FeedView />;
     case "search":
-      return <SearchView />;
+      return <div className="mx-auto w-full max-w-xl"><SearchView /></div>;
     case "create":
-      return <CreateView />;
+      return <div className="mx-auto w-full max-w-xl"><CreateView /></div>;
     case "wallet":
-      return <WalletView />;
+      return <div className="mx-auto w-full max-w-xl"><WalletView /></div>;
     case "profile":
-      return <ProfileView name={me} />;
+      return <div className="mx-auto w-full max-w-xl"><ProfileView name={me} /></div>;
   }
 }
 
@@ -191,7 +191,7 @@ function Shell() {
   return (
     <div className="min-h-dvh">
       <Header />
-      <main className="mx-auto w-full max-w-xl px-4 pb-28 pt-4">
+      <main className="mx-auto w-full max-w-6xl px-4 pb-28 pt-4">
         <CurrentView />
       </main>
       <BottomNav />

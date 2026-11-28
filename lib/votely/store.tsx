@@ -273,7 +273,7 @@ export function VotelyProvider({ children }: { children: ReactNode }) {
         return;
       }
       const current = dataRef.current;
-      if (current.votes[pollId]) return;
+      if (current.votes[pollId] === optionId) return;
       if (current.vt < VOTE_COST) {
         setEarnPrompt(`Voting costs ${VOTE_COST} VT and your balance is ${current.vt} VT.`);
         return;
@@ -289,7 +289,7 @@ export function VotelyProvider({ children }: { children: ReactNode }) {
     if (!pendingVote) return;
     const current = dataRef.current;
     setPendingVote(null);
-    if (current.votes[pendingVote.pollId]) return;
+    if (current.votes[pendingVote.pollId] === pendingVote.optionId) return;
     if (current.vt < VOTE_COST) {
       setEarnPrompt(`Voting costs ${VOTE_COST} VT and your balance is ${current.vt} VT.`);
       return;
@@ -301,7 +301,7 @@ export function VotelyProvider({ children }: { children: ReactNode }) {
       },
       ["votes"],
     );
-    toast.success("Your vote is in. Results are live.");
+    toast.success(current.votes[pendingVote.pollId] ? "Your vote has been changed." : "Your vote is in. Results are live.");
   }, [pendingVote, commit, announce]);
 
   const createPoll = useCallback(
@@ -343,6 +343,8 @@ export function VotelyProvider({ children }: { children: ReactNode }) {
         authorName: me,
         createdAt: Date.now(),
         boost,
+        coverImage: input.coverImage ?? null,
+        galleryImages: (input.galleryImages ?? []).slice(0, 4),
         options: options
           .slice(0, LIMITS.maxOptions)
           .map((text, i) => ({ id: `${id}-o${i + 1}`, text, votes: 0 })),

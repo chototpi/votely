@@ -9,27 +9,28 @@ import type { PollView } from "@/lib/votely/types";
 export function PollOptions({ poll }: { poll: PollView }) {
   const { requestVote } = useVotely();
   const hasVoted = poll.myVote !== null;
+  const showResults = hasVoted;
   const leadingVotes = Math.max(...poll.options.map((o) => o.votes));
 
   return (
     <ul className="flex flex-col gap-2">
       {poll.options.map((option) => {
         const isMine = poll.myVote === option.id;
-        const isLeading = option.votes === leadingVotes && poll.total > 0;
+        const isLeading = showResults && option.votes === leadingVotes && poll.total > 0;
         return (
           <li key={option.id}>
             <button
               type="button"
-              disabled={hasVoted}
+              disabled={isMine}
               onClick={() => requestVote(poll.id, option.id)}
               aria-label={
                 hasVoted
-                  ? `${option.text}: ${option.percent} percent${isMine ? ", your vote" : ""}`
+                  ? `${option.text}${showResults ? `: ${option.percent} percent` : ""}${isMine ? ", your vote" : ""}`
                   : `Vote for ${option.text}`
               }
               className={cn(
                 "relative w-full overflow-hidden rounded-xl border bg-card text-left transition-colors",
-                !hasVoted && "hover:border-primary/60 active:scale-[0.99]",
+                !isMine && "hover:border-primary/60 active:scale-[0.99]",
                 isMine && "border-primary",
               )}
             >
@@ -39,7 +40,7 @@ export function PollOptions({ poll }: { poll: PollView }) {
                   "absolute inset-y-0 left-0 transition-[width] duration-700 ease-out",
                   isMine ? "bg-primary/25" : "bg-secondary",
                 )}
-                style={{ width: `${option.percent}%` }}
+                style={{ width: showResults ? `${option.percent}%` : "0%" }}
               />
               <span className="relative flex items-center gap-3 px-3.5 py-3">
                 <span
@@ -49,7 +50,7 @@ export function PollOptions({ poll }: { poll: PollView }) {
                     isMine
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-muted-foreground/40",
-                    hasVoted && !isMine && "border-transparent",
+                    showResults && !isMine && "border-transparent",
                   )}
                 >
                   {isMine && <Check className="size-3" strokeWidth={3} />}
@@ -63,16 +64,15 @@ export function PollOptions({ poll }: { poll: PollView }) {
                   {option.text}
                 </span>
                 <span className="flex shrink-0 flex-col items-end leading-tight">
-                  <span className="text-sm font-semibold tabular-nums">{option.percent}%</span>
-                  <span className="text-xs text-muted-foreground tabular-nums">
-                    {formatCount(option.votes)}
-                  </span>
+                  {showResults && <><span className="text-sm font-semibold tabular-nums">{option.percent}%</span><span className="text-xs text-muted-foreground tabular-nums">{formatCount(option.votes)}</span></>}
                 </span>
               </span>
             </button>
           </li>
         );
       })}
+      {!hasVoted && <li className="px-1 text-[11px] text-muted-foreground">Vote to reveal the results. You can change your vote later.</li>}
+      {hasVoted && <li className="px-1 text-[11px] text-muted-foreground">Your vote is counted. Select another option to change it.</li>}
     </ul>
   );
 }
