@@ -190,8 +190,8 @@ const loadSDKLite = (): Promise<void> => {
 };
 
 export function PiAuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authMessage, setAuthMessage] = useState("Initializing Pi Network...");
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [authMessage, setAuthMessage] = useState("Demo mode");
   const [hasError, setHasError] = useState(false);
   const [sdk, setSdk] = useState<SDKLiteInstance | null>(null);
   const [products, setProducts] = useState<Product[] | null>(null);
@@ -274,7 +274,7 @@ export function PiAuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    initialize();
+    // Preview mode: bỏ qua đăng nhập Pi
   }, []);
 
   const value: PiAuthContextType = {
